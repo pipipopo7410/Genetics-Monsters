@@ -55,3 +55,6 @@ body.fusion-active #spermArea,body.fusion-active #eggArea{opacity:0}
  .mobile-fertilize{display:block;position:absolute;bottom:7px;left:50%;transform:translateX(-50%);z-index:4;font-size:15px;padding:9px 15px}
  .mobile-parent-gamete .sperm-tail{left:-32%;width:38%}
 }
+
+/* 第四輪：缺圖提示不再是一片空白。三條配子染色體共同中心對齊。 */
+.monster-view.asset-missing::before,.record-monster-thumb.asset-missing::before,.detail-monster.asset-missing::before{content:"圖片未載入，請確認 assets 資料夾已上傳";position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#a94950;font-size:12px;font-weight:700;padding:10px;z-index:2;background:#fff8f8de;pointer-events:none}

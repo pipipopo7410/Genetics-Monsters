@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#f0f4f7" />
 <meta name="description" content="小怪獸遺傳實驗室 2.0：原版風格、七年級循序探索、九年級應用、多胎紀錄。" />
-<title>小怪獸遺傳實驗室 2.0｜原版精修</title>
-<link rel="stylesheet" href="style.css" />
+<title>小怪獸遺傳實驗室 2.0｜第四輪精修</title>
+<link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
 <div id="app">
   <header class="header">
-    <div class="header-top"><div class="header-title">小怪獸遺傳實驗室 <small>2.0｜原版精修</small></div><div class="actions"><div class="mode-switch" aria-label="年級模式"><button class="on" id="mode7" type="button">七年級</button><button id="mode9" type="button">九年級</button></div><button class="btn orange" id="reset" type="button">↻ 再生一次</button></div></div>
+    <div class="header-top"><div class="header-title">小怪獸遺傳實驗室 <small>2.0｜第四輪精修</small></div><div class="actions"><div class="mode-switch" aria-label="年級模式"><button class="on" id="mode7" type="button">七年級</button><button id="mode9" type="button">九年級</button></div><button class="btn orange" id="reset" type="button">↻ 再生一次</button></div></div>
     <div class="header-bottom"><div class="trait-legend" id="legend"><span class="trait-tag">A：體色</span><span class="trait-tag">B：翅膀</span><span class="trait-tag">D：手數</span><span class="trait-tag">E：長角</span><span class="trait-tag">F：腳長</span><span class="trait-tag">G：斑紋</span><span class="trait-tag">H：眼數</span></div><div class="stage-trail" id="stages"><button class="stage-step on" data-stage="0">① 體色</button><button class="stage-step locked" data-stage="1">② 多性狀</button><button class="stage-step locked" data-stage="2">③ 全部</button></div></div>
     <div class="mission"><strong id="missionTitle">七年級探索</strong><p id="missionText">先觀察 A / a 對體色的影響，其他性狀照常出現。</p></div>
   </header>
@@ -27,12 +27,12 @@
     <section class="panel monster-panel" data-panel="baby-monster"><div class="monster-view baby-empty" id="childMonsterDesktop">?</div><div class="monster-label" style="color:var(--purple)">小孩外型</div><div class="baby-desc" id="childInfoDesktop">等待受精</div></section>
     <section class="panel monster-panel" data-panel="mom-monster"><div class="monster-view" id="momMonsterDesktop"></div><div class="monster-label" style="color:var(--mom)">媽媽外型</div></section>
   </main>
-  <footer class="footer"><div class="footer-actions"><button type="button" class="mini-btn primary" id="batchBtn">✦ 先手動生 1 胎</button><button type="button" class="mini-btn" id="recordsBtn">小怪獸家族紀錄</button><button type="button" class="mini-btn" id="legendBtn">顯隱性對照</button></div><div class="footer-hint">原版細胞排列 · 點選或拖曳染色體 · 再生一次不會清空紀錄</div><span class="footer-count" id="recordBadge">0 胎</span></footer>
+  <footer class="footer"><div class="footer-actions"><button type="button" class="mini-btn primary" id="batchBtn">✦ 先手動生 1 胎</button><button type="button" class="mini-btn" id="recordsBtn">小怪獸家族紀錄</button></div><div class="footer-hint">原版細胞排列 · 點選或拖曳染色體 · 再生一次不會清空紀錄</div><span class="footer-count" id="recordBadge">0 胎</span></footer>
 </div>
 <div id="recordsMask" class="drawer-mask" hidden><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="recordsTitle"><div class="drawer-heading"><h2 id="recordsTitle">📒 小怪獸家族紀錄 <span id="recordsTotal">0 胎</span></h2><div><button id="clearRecords" class="mini-btn" type="button">清空紀錄</button> <button class="cross" data-close="recordsMask" type="button" aria-label="關閉">×</button></div></div><p class="drawer-description">每一胎的精子與卵子都從相同父母重新形成。點選小怪獸，能回看當胎的配子與基因型。</p><div class="record-grid" id="recordGrid"></div><div class="record-nav"><span id="recordPaging">第 1 頁</span><div class="record-nav-buttons"><button id="prevRecords" type="button" class="mini-btn">‹ 上一頁</button><button id="nextRecords" type="button" class="mini-btn">下一頁 ›</button></div></div><div class="proof-panel" id="proofPanel"><div class="proof-heading"><strong id="proofTitle">任務 1｜尋找顯性體色</strong><span id="proofCount">0 筆證據</span></div><div id="proofText" class="proof-sub">先選擇不同小怪獸作為證據。</div><div class="proof-actions" id="proofActions"></div></div></section></div>
 <div id="dialogMask" class="dialog-mask" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog-heading"><h2 id="dialogTitle">詳細資訊</h2><button class="cross" data-close="dialogMask" type="button" aria-label="關閉">×</button></div><div id="dialogBody"></div><div class="dialog-foot" id="dialogFoot"></div></section></div>
 <div class="toast" id="toast" hidden aria-live="polite" role="status"></div>
 <div class="orientation-tip" id="orientTip" hidden>橫向操作可以同時看見三個細胞，建議將裝置橫放。<button id="dismissOrient" type="button">知道了</button></div>
-<script src="app.js"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
