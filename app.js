@@ -20,9 +20,9 @@ const phenotypes=g=>Object.fromEntries(TRAITS.map(t=>[t.k,g[t.k].includes(t.k)])
 function individual(side){return phenotypeFromGenes(PARENTS[side].flatMap(c=>c.genes));}
 function phenotypeFromGenes(all){return Object.fromEntries(TRAITS.map(t=>[t.k,all.includes(t.k)]));}
 function monsterLayers(t){return [!t.B&&'wing',t.D?'hands2':'hands4',t.F?'legsShort':'legsLong',t.A?'green':'yellow',t.H?'eyes2':'eyes3',t.E&&'horn',!t.G&&'spots'].filter(Boolean);}
-const imgURL=key=>`./assets/${FILES[key]}.webp?v=4`;
+const imgURL=key=>window.MONSTER_ASSET_DATA?.[FILES[key]] || `./assets/${FILES[key]}.webp?v=5`;
 function monsterHTML(t){return monsterLayers(t).map(key=>`<img class="monster-layer" src="${imgURL(key)}" decoding="async" alt="" draggable="false" onerror="this.onerror=null;this.style.opacity=0;this.closest('.monster-view, .record-monster-thumb, .detail-monster')?.classList.add('asset-missing');">`).join('');}
-function renderMonsterTo(id,t){const el=$(id);if(!el)return;el.innerHTML=monsterHTML(t);el.classList.remove('baby-empty');}
+function renderMonsterTo(id,t){const el=$(id);if(!el)return;el.innerHTML=monsterHTML(t);el.classList.remove('baby-empty','asset-missing');}
 function chrRect(info,x,y,i,side,selected=false,fade=false,scale=1){
  const sizes=[80,60,42],h=sizes[info.type-1];const w=13;
  const col=side==='dad'?(i%2?'#85c1e9':'#3498db'):(i%2?'#f1948a':'#e74c3c');
@@ -39,7 +39,7 @@ function chrRect(info,x,y,i,side,selected=false,fade=false,scale=1){
 }
 function parentSVG(side){const P=PARENTS[side];const ch=state.choice[side];const x=[16,40,82,106,148,172];return `<svg class="cell-svg" viewBox="0 0 200 200" aria-label="三對同源染色體，可點選或拖曳到配子" xmlns="http://www.w3.org/2000/svg">${P.map((c,i)=>{const height=[80,60,42][c.type-1];return chrRect(c,x[i],(200-height)/2,i,side,ch.includes(c.id),ch.includes(c.id));}).join('')}</svg>`;}
 function tokenSVG(c,side,i){
- const h=[56,42,31][c.type-1], x=29+i*33, y=(132-h)/2;
+ const h=[56,42,31][c.type-1], x=22+i*31, y=(132-h)/2;
  const col=side==='dad'?'#3498db':'#e74c3c';
  const rows=c.genes.map((g,j)=>{
   const gy=y+(j+.5)*h/c.genes.length;
@@ -50,7 +50,7 @@ function tokenSVG(c,side,i){
 function gameteSVG(side){
  const g=chosen(side),color=side==='dad'?'#3498db':'#e74c3c';
  const tail=side==='dad'?`<svg class="sperm-tail" viewBox="0 0 110 60" aria-hidden="true"><path d="M 108 30 C 87 25, 80 11, 60 29 S 35 50, 12 27 S 2 15, 2 15"/></svg>`:'';
- return `${tail}<svg class="gamete-svg" viewBox="0 0 132 132" role="img" aria-label="${side==='dad'?'精子':'卵子'}"><path d="M 17 98 Q 66 115 114 98" stroke="${color}" stroke-width="1" opacity=".20" fill="none"/>${g.map((c,i)=>c?tokenSVG(c,side,i):`<text x="${34+i*33}" y="79" font-size="21" fill="#d1d8dd" text-anchor="middle">·</text>`).join('')}</svg><span class="gamete-caption">${side==='dad'?'精子':'卵子'}</span>`;
+ return `${tail}<svg class="gamete-svg" viewBox="0 0 132 132" role="img" aria-label="${side==='dad'?'精子':'卵子'}"><path d="M 17 98 Q 66 115 114 98" stroke="${color}" stroke-width="1" opacity=".20" fill="none"/>${g.map((c,i)=>c?tokenSVG(c,side,i):`<text x="${30+i*34}" y="79" font-size="21" fill="#d1d8dd" text-anchor="middle">·</text>`).join('')}</svg>`;
 }
 function childSVG(record){const x=[16,40,82,106,148,172];const gametes=[record.dad,record.mom];let html='';for(let type=1;type<=3;type++)for(let parent=0;parent<2;parent++){
  const c=gametes[parent][type-1];const i=(type-1)*2+parent;const h=[80,60,42][type-1];html+=chrRect(c,x[i],(200-h)/2,parent,parent===0?'dad':'mom',false,false,1);
@@ -255,7 +255,7 @@ function beginDrag(e){
  const hit=e.target.closest('.chr-hit');
  if(!hit||hit.classList.contains('faded')||busy||batchActive||e.button>0)return;
  e.preventDefault();
- drag={id:hit.dataset.id,side:hit.dataset.side,x:e.clientX,y:e.clientY,pointerId:e.pointerId,moved:false,ghost:null,source:hit};
+ drag={kind:'to-gamete',id:hit.dataset.id,side:hit.dataset.side,x:e.clientX,y:e.clientY,pointerId:e.pointerId,moved:false,ghost:null,source:hit};
  try{hit.setPointerCapture(e.pointerId);}catch{}
 }
 function moveDrag(e){
@@ -267,23 +267,62 @@ function moveDrag(e){
  }
  if(!drag.moved)return;
  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
- document.querySelectorAll('.gamete').forEach(zone=>{const rect=zone.getBoundingClientRect();zone.classList.toggle('drop-here',zone.dataset.side===drag.side&&rect.width>20&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom);});
+ if(drag.kind==='return'){
+  document.querySelectorAll('#dadCell,#momCell').forEach(cell=>{const rect=cell.getBoundingClientRect();cell.classList.toggle('drop-here',cell.id===drag.side+'Cell'&&rect.width>20&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom);});
+ }else{
+  document.querySelectorAll('.gamete').forEach(zone=>{const rect=zone.getBoundingClientRect();zone.classList.toggle('drop-here',zone.dataset.side===drag.side&&rect.width>20&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom);});
+ }
 }
 function endDrag(e){
  if(!drag||e.pointerId!==drag.pointerId)return;
  const d=drag;drag=null;d.source?.classList.remove('drag-source');d.ghost?.remove();
- document.querySelectorAll('.gamete').forEach(el=>el.classList.remove('drop-here'));
+ document.querySelectorAll('.gamete,#dadCell,#momCell').forEach(el=>el.classList.remove('drop-here'));
+ if(d.kind==='return'){
+  if(!d.moved){
+   suppressGameteClickUntil=performance.now()+450;
+   returnGameteChromosome(d.side,d.index);
+   return;
+  }
+  suppressGameteClickUntil=performance.now()+450;
+  const destination=document.elementFromPoint(e.clientX,e.clientY);
+  const parent=destination?.closest('#dadCell,#momCell');
+  if(parent?.id===d.side+'Cell')returnGameteChromosome(d.side,d.index);
+  return; // Other destinations return the chromosome to its previous slot.
+ }
  if(!d.moved){choose(d.side,d.id);return;}
  const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.gamete');
  if(target?.dataset.side===d.side)choose(d.side,d.id,{x:e.clientX,y:e.clientY});
  // Dropping outside a gamete simply returns the chromosome without extra instructions.
 }
 function onChrKey(e){const g=e.target.closest('.chr-hit');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(!g.classList.contains('faded'))choose(g.dataset.side,g.dataset.id);}}
-function removeGamete(e){const g=e.target.closest('[data-remove-i]');if(!g||busy)return;const side=g.dataset.removeSide,i=Number(g.dataset.removeI);state.choice[side][i]=null;renderUI();}
+let suppressGameteClickUntil=0;
+function returnGameteChromosome(side,i){
+ if(busy||batchActive||!Number.isInteger(i)||i<0||i>2||!state.choice[side]?.[i])return false;
+ state.choice[side][i]=null;
+ renderUI();
+ return true;
+}
+function removeGamete(e){
+ if(performance.now()<suppressGameteClickUntil)return;
+ const g=e.target.closest('[data-remove-i]');
+ if(!g||busy||batchActive)return;
+ returnGameteChromosome(g.dataset.removeSide,Number(g.dataset.removeI));
+}
+function beginReturnDrag(e){
+ const hit=e.target.closest('[data-remove-i]');
+ if(!hit||busy||batchActive||e.button>0)return;
+ const side=hit.dataset.removeSide,i=Number(hit.dataset.removeI),c=chosen(side)[i];
+ if(!c)return;
+ e.preventDefault();
+ drag={kind:'return',side,id:c.id,index:i,x:e.clientX,y:e.clientY,pointerId:e.pointerId,moved:false,ghost:null,source:hit};
+ try{hit.setPointerCapture(e.pointerId);}catch{}
+}
 function stage(n){if(state.mode===9)return;if(n>state.unlocked){toast('完成目前的證據任務後才能解鎖。');return;}state.stage=n;renderUI();}
 function mode(n){cancelAnimation();state.mode=n;state.stage=n===9?2:Math.min(state.unlocked,state.stage===2?2:state.stage);state.proof=[];state.guess=null;renderUI();toast(n===9?'九年級模式已啟用。':'七年級：循序探索模式已啟用。');}
 function orientation(){let dismissed=false;try{dismissed=sessionStorage.getItem('monster_orient_dismissed')==='1';}catch{}if(window.matchMedia('(orientation:portrait)').matches&&window.innerWidth<900&&!dismissed)$('orientTip').hidden=false;else $('orientTip').hidden=true;}
-function setup(){for(const side of ['dad','mom']){const el=$(side+'Cell');el.addEventListener('pointerdown',beginDrag);el.addEventListener('keydown',onChrKey);}document.addEventListener('pointermove',moveDrag);document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',()=>{drag?.ghost?.remove();drag=null;document.querySelectorAll('.gamete').forEach(el=>el.classList.remove('drop-here'));});$('spermArea').addEventListener('click',removeGamete);$('eggArea').addEventListener('click',removeGamete);$('mobileDadGamete').addEventListener('click',removeGamete);$('mobileMomGamete').addEventListener('click',removeGamete);$('combineBtn').addEventListener('click',fertilize);$('combineBtnMobile').addEventListener('click',fertilize);$('reset').addEventListener('click',reset);$('batchBtn').addEventListener('click',batch);$('recordsBtn').addEventListener('click',openRecords);$('mode7').addEventListener('click',()=>mode(7));$('mode9').addEventListener('click',()=>mode(9));document.querySelectorAll('[data-stage]').forEach(el=>el.addEventListener('click',()=>stage(Number(el.dataset.stage))));document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click',()=>el.dataset.page==='records'?openRecords():setPage(el.dataset.page)));$('clearRecords').addEventListener('click',confirmClear);$('prevRecords').addEventListener('click',()=>{recordPage--;renderRecords();});$('nextRecords').addEventListener('click',()=>{recordPage++;renderRecords();});$('recordGrid').addEventListener('click',e=>{const item=e.target.closest('[data-record]');if(item)detail(Number(item.dataset.record));});$('proofActions').addEventListener('click',e=>{const g=e.target.closest('[data-guess]');if(g){state.guess=g.dataset.guess;renderProof();save();return;}const a=e.target.closest('[data-proof-action]');if(a){if(a.dataset.proofAction==='verify')verify();else if(a.dataset.proofAction==='verify-multi')verifyMulti();}});$('dialogFoot').addEventListener('click',e=>{const v=e.target.closest('[data-evidence]');if(v){const id=Number(v.dataset.evidence);state.proof=state.proof.includes(id)?state.proof.filter(i=>i!==id):[...state.proof,id];save();closeDialog();renderRecords();toast(state.proof.includes(id)?'已加入這一胎作為證據。':'已移除此證據。');return;}if(e.target.id==='confirmClear')clearRecords();if(e.target.matches('[data-cancel-dialog]'))closeDialog();});document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.close==='recordsMask')closeRecords();else closeDialog();}));$('recordsMask').addEventListener('click',e=>{if(e.target===$('recordsMask'))closeRecords();});$('dialogMask').addEventListener('click',e=>{if(e.target===$('dialogMask'))closeDialog();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('dialogMask').hidden)closeDialog();else if(!$('recordsMask').hidden)closeRecords();}});$('dismissOrient').addEventListener('click',()=>{try{sessionStorage.setItem('monster_orient_dismissed','1');}catch{}$('orientTip').hidden=true;});window.addEventListener('resize',()=>{renderMobile();orientation();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&busy){cancelAnimation();renderUI();}});}
+function setup(){for(const side of ['dad','mom']){const el=$(side+'Cell');el.addEventListener('pointerdown',beginDrag);el.addEventListener('keydown',onChrKey);}document.addEventListener('pointermove',moveDrag);document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',()=>{drag?.ghost?.remove();drag=null;document.querySelectorAll('.gamete,#dadCell,#momCell').forEach(el=>el.classList.remove('drop-here'));});for(const id of ['spermArea','eggArea','mobileDadGamete','mobileMomGamete']){
+ const zone=$(id);zone.addEventListener('pointerdown',beginReturnDrag);zone.addEventListener('click',removeGamete);
+ }$('combineBtn').addEventListener('click',fertilize);$('combineBtnMobile').addEventListener('click',fertilize);$('reset').addEventListener('click',reset);$('batchBtn').addEventListener('click',batch);$('recordsBtn').addEventListener('click',openRecords);$('mode7').addEventListener('click',()=>mode(7));$('mode9').addEventListener('click',()=>mode(9));document.querySelectorAll('[data-stage]').forEach(el=>el.addEventListener('click',()=>stage(Number(el.dataset.stage))));document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click',()=>el.dataset.page==='records'?openRecords():setPage(el.dataset.page)));$('clearRecords').addEventListener('click',confirmClear);$('prevRecords').addEventListener('click',()=>{recordPage--;renderRecords();});$('nextRecords').addEventListener('click',()=>{recordPage++;renderRecords();});$('recordGrid').addEventListener('click',e=>{const item=e.target.closest('[data-record]');if(item)detail(Number(item.dataset.record));});$('proofActions').addEventListener('click',e=>{const g=e.target.closest('[data-guess]');if(g){state.guess=g.dataset.guess;renderProof();save();return;}const a=e.target.closest('[data-proof-action]');if(a){if(a.dataset.proofAction==='verify')verify();else if(a.dataset.proofAction==='verify-multi')verifyMulti();}});$('dialogFoot').addEventListener('click',e=>{const v=e.target.closest('[data-evidence]');if(v){const id=Number(v.dataset.evidence);state.proof=state.proof.includes(id)?state.proof.filter(i=>i!==id):[...state.proof,id];save();closeDialog();renderRecords();toast(state.proof.includes(id)?'已加入這一胎作為證據。':'已移除此證據。');return;}if(e.target.id==='confirmClear')clearRecords();if(e.target.matches('[data-cancel-dialog]'))closeDialog();});document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.close==='recordsMask')closeRecords();else closeDialog();}));$('recordsMask').addEventListener('click',e=>{if(e.target===$('recordsMask'))closeRecords();});$('dialogMask').addEventListener('click',e=>{if(e.target===$('dialogMask'))closeDialog();});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('dialogMask').hidden)closeDialog();else if(!$('recordsMask').hidden)closeRecords();}});$('dismissOrient').addEventListener('click',()=>{try{sessionStorage.setItem('monster_orient_dismissed','1');}catch{}$('orientTip').hidden=true;});window.addEventListener('resize',()=>{renderMobile();orientation();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&busy){cancelAnimation();renderUI();}});}
 renderMonsterTo('dadMonster',individual('dad'));renderMonsterTo('dadMonsterDesktop',individual('dad'));renderMonsterTo('momMonster',individual('mom'));renderMonsterTo('momMonsterDesktop',individual('mom'));
 setup();renderUI();orientation();
 window.__monsterQA={parents:PARENTS,genotype,phenotypes,createRecord,randGamete,getState:()=>structuredClone(state),choose,reset};

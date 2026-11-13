@@ -30,7 +30,7 @@ button:disabled{cursor:not-allowed;opacity:.5}#app{height:100vh;height:100dvh;wi
 #combineBtn.ready{visibility:visible;opacity:1;pointer-events:auto}
 .chr-hit,.chr-hit:active{cursor:pointer}
 .chr-hit.drag-source{opacity:.22}
-.gamete[data-side="dad"]{width:calc(var(--gamete)*1.06);height:calc(var(--gamete)*.80);border-radius:56% 54% 56% 52%;overflow:visible}
+.gamete[data-side="dad"]{width:calc(var(--gamete)*.89);height:calc(var(--gamete)*.74);border-radius:55% 53% 55% 52%;overflow:visible}
 .gamete[data-side="dad"] .gamete-svg{width:100%;height:100%}
 .sperm-tail{position:absolute;top:10%;left:-63%;width:68%;height:80%;overflow:visible;pointer-events:none;z-index:0;transform-origin:100% 50%;animation:tailUndulate .45s ease-in-out infinite alternate}
 .sperm-tail path{stroke:#3498db;stroke-width:4;fill:none;stroke-linecap:round}
@@ -58,3 +58,9 @@ body.fusion-active #spermArea,body.fusion-active #eggArea{opacity:0}
 
 /* 第四輪：缺圖提示不再是一片空白。三條配子染色體共同中心對齊。 */
 .monster-view.asset-missing::before,.record-monster-thumb.asset-missing::before,.detail-monster.asset-missing::before{content:"圖片未載入，請確認 assets 資料夾已上傳";position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#a94950;font-size:12px;font-weight:700;padding:10px;z-index:2;background:#fff8f8de;pointer-events:none}
+
+/* Fifth-round refinements: returning a gamete chromosome & smaller sperm. */
+#dadCell.drop-here,#momCell.drop-here{box-shadow:0 0 0 5px #58b28e55,inset 0 0 12px #c7f3de;transition:box-shadow .13s ease}
+.gamete-chr{cursor:pointer;touch-action:none;user-select:none}
+.gamete-chr.drag-source{opacity:.20}
+.gamete-svg{touch-action:none}
